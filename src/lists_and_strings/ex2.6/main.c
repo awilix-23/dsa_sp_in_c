@@ -14,7 +14,6 @@ int main(void)
 
   Insert(2, 2.0, &L);
   assert(Select(2, &L) == 2.0);
-  assert(Select(3, &L) == 1.0); /* Circular, so we looped back around ! */
 
   Replace(1, 3.0, &L);
   assert(Select(1, &L) == 3.0);

@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "ListInterface.h"
 
-#define SENTINAL_VALUE 99999.9
+#define SENTINEL_VALUE 99999.9
 
 void Initialize(List *L)
 {
@@ -25,7 +25,11 @@ ItemType Select(int index, List *L)
 {
   if (L->Count == 0) {
     fprintf(stderr, "List is empty.\n");
-    return SENTINAL_VALUE;
+    return SENTINEL_VALUE;
+  }
+  if (index < 1 || index > L->Count) {
+    fprintf(stderr, "Invalid index.\n");
+    return SENTINEL_VALUE;
   }
 
   ItemType SelectedItem;
@@ -45,6 +49,10 @@ void Replace(int index, ItemType X, List *L)
     fprintf(stderr, "List is empty.\n");
     return;
   }
+  if (index < 1 || index > L->Count) {
+    fprintf(stderr, "Invalid index.\n");
+    return;
+  }
 
   ListNode *M;
   M = L->Header;
@@ -56,31 +64,22 @@ void Replace(int index, ItemType X, List *L)
 
 void Insert(int index, ItemType X, List *L)
 {
-  ListNode *N;
+  if (index < 1 || index > L->Count + 1) {
+    fprintf(stderr, "Invalid index.\n");
+    return;
+  }
+
+  ListNode *N, *M;
   N = (ListNode *)malloc(sizeof(ListNode));
 
-  if (L->Count == 0) {
-    L->Header->Link = N;
-    N->Item = X;
-    N->Link = NULL;
-    L->Count++;
-  } else {
-    ListNode *M;
-    M = L->Header;
+  M = L->Header;
+  for (int i = 1; i < index; i++) { M = M->Link; }
 
-    for (int i = 1; i < index; i++) { M = M->Link; }
+  N->Item = X;
+  N->Link = (L->Count == 0) ? N : M->Link;
+  M->Link = N;
 
-    N->Link = M->Link;
-    M->Link = N;
-    N->Item = X;
-
-    if (L->Count == 1) {
-      while (M->Link != NULL) { M = M->Link; }
-      M->Link = L->Header->Link;
-    }
-
-    L->Count++;
-  }
+  L->Count++;
 }
 
 void Delete(ItemType X, List *L)
@@ -91,31 +90,18 @@ void Delete(ItemType X, List *L)
   }
 
   ListNode *N, *M;
-  M = L->Header->Link;
+  M = L->Header;
 
-  if (M->Item == X) {
-    L->Header->Link = M->Link;
-    free(M);
-    L->Count--;
-    return;
-  }
+  do {
+    if (M->Link->Item == X) {
+      N = M->Link;
+      M->Link = N->Link;
+      free(N);
+      L->Count--;
 
-  while (M->Link != NULL && M->Link->Item != X) { 
-    M = M->Link;
-    if (M == L->Header->Link) {
-      fprintf(stderr, "Item not found in list.\n");
-      return;
+      if (L->Count == 0) { L->Header->Link = NULL; }
+    } else {
+      M = M->Link;
     }
-  }
-
-  N = M->Link;
-
-  if (L->Count <= 2) {
-    M->Link = NULL;
-  } else {
-    M->Link = N->Link;
-  }
-
-  free(N);
-  L->Count--;
+  } while(M != L->Header && M->Link != L->Header->Link);
 }
